@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-montserrat font-bold;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-blue text-white px-8 py-3 rounded-md text-lg font-medium hover:bg-opacity-90 transition-colors;
+  }
+  .btn-secondary {
+    @apply border-2 border-brand-blue text-brand-blue px-8 py-3 rounded-md text-lg font-medium hover:bg-brand-blue hover:text-white transition-colors;
+  }
+  .section-padding {
+    @apply py-16 md:py-20;
+  }
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .hero-bg {
+    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(249, 250, 251, 0.9)), url('/home-hero.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    isolation: isolate;
+  }
 }

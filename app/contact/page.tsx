@@ -1,22 +1,32 @@
-import type { Metadata } from 'next';
-import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
-import { generateMetadata } from '../config/metadata';
+'use client';
 
-export const metadata: Metadata = generateMetadata({
-  title: 'Contact Us',
-  description: 'Contact TV Pro\'s Electronics for professional TV repair services in Johannesburg. Call us at +27 71 734 3348 or visit our location.',
-  path: '/contact'
-});
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { sendContactEmail } from '../actions/sendContactEmail';
 
 export default function ContactPage() {
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
+    <div className="bg-gray-50">
       
       {/* Hero Section */}
-      <section className="bg-brand-gray py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section 
+        className="relative bg-brand-gray py-16" 
+        style={{
+          backgroundImage: 'url("/hero-img.jpg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-black bg-opacity-75"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
             Contact Us
           </h1>
@@ -100,7 +110,32 @@ export default function ContactPage() {
               <h2 className="text-2xl font-bold text-brand-black mb-6">
                 Send Us a Message
               </h2>
-              <form className="space-y-6">
+              <form 
+                className="space-y-6" 
+                onSubmit={handleSubmit(async (data) => {
+                  setStatus('submitting');
+                  try {
+                    const formData = new FormData();
+                    Object.entries(data).forEach(([key, value]) => {
+                      formData.append(key, value as string);
+                    });
+                    
+                    const result = await sendContactEmail(formData);
+                    if (result.status === 'success') {
+                      setStatus('success');
+                      setMessage(result.message);
+                      reset();
+                    } else {
+                      setStatus('error');
+                      setMessage(result.message);
+                    }
+                  } catch (error) {
+                    setStatus('error');
+                    setMessage('An unexpected error occurred. Please try again.');
+                    console.error('Form submission error:', error);
+                  }
+                })}
+              >
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                     Name
@@ -108,9 +143,12 @@ export default function ContactPage() {
                   <input
                     type="text"
                     id="name"
-                    name="name"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+                    {...register('name', { required: 'Name is required' })}
+                    className="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-brand-blue focus:border-transparent transition-all"
                   />
+                  {errors.name && (
+                    <p className="text-red-500 text-sm mt-1">{errors.name.message as string}</p>
+                  )}
                 </div>
 
                 <div>
@@ -120,9 +158,18 @@ export default function ContactPage() {
                   <input
                     type="email"
                     id="email"
-                    name="email"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+                    {...register('email', {
+                      required: 'Email is required',
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: 'Invalid email address',
+                      },
+                    })}
+                    className="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-brand-blue focus:border-transparent transition-all"
                   />
+                  {errors.email && (
+                    <p className="text-red-500 text-sm mt-1">{errors.email.message as string}</p>
+                  )}
                 </div>
 
                 <div>
@@ -132,9 +179,12 @@ export default function ContactPage() {
                   <input
                     type="tel"
                     id="phone"
-                    name="phone"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+                    {...register('phone', { required: 'Phone number is required' })}
+                    className="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-brand-blue focus:border-transparent transition-all"
                   />
+                  {errors.phone && (
+                    <p className="text-red-500 text-sm mt-1">{errors.phone.message as string}</p>
+                  )}
                 </div>
 
                 <div>
@@ -143,18 +193,34 @@ export default function ContactPage() {
                   </label>
                   <textarea
                     id="message"
-                    name="message"
                     rows={4}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+                    {...register('message', { required: 'Message is required' })}
+                    className="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-brand-blue focus:border-transparent transition-all"
                   ></textarea>
+                  {errors.message && (
+                    <p className="text-red-500 text-sm mt-1">{errors.message.message as string}</p>
+                  )}
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-brand-blue text-white px-6 py-3 rounded-md font-medium hover:bg-opacity-90 transition-colors"
+                  disabled={status === 'submitting'}
+                  className="w-full bg-brand-blue text-white px-6 py-3 rounded-md font-medium hover:bg-opacity-90 transition-colors disabled:opacity-50"
                 >
-                  Send Message
+                  {status === 'submitting' ? 'Sending...' : 'Send Message'}
                 </button>
+
+                {status === 'success' && (
+                  <div className="bg-green-50 text-green-600 text-center font-medium p-4 rounded-md">
+                    {message || 'Thank you! We\'ll get back to you soon.'}
+                  </div>
+                )}
+
+                {status === 'error' && (
+                  <div className="bg-red-50 text-red-600 text-center font-medium p-4 rounded-md">
+                    {message || 'Sorry, something went wrong. Please try again or contact us directly.'}
+                  </div>
+                )}
               </form>
             </div>
           </div>
@@ -178,8 +244,6 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 }
